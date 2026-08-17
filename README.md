@@ -17,13 +17,15 @@ The Lean 4 + Plausible source of truth for the fabric's 100-byte entity packet (
 
 Position int64 μm is the integral twin of the `precision=double` large-world coordinate, and matches the Lean-proved predictive BVH's int64-μm AABB space (`interactor-spatial-oracle`, kept in sync). Velocity shares the BVH's `V_MAX` scale.
 
-## The C codec
+## The emitted codecs
 
-`xr_grid_entity_packet.h` is emitted from `EntityPacket/Codec.lean` and committed at the root, so a repository that vendors this one gets the codec without running Lean. It is plain C with no dependency beyond `stdint.h`: `xr_grid_entity_packet_t`, an encode, a decode, and the offsets as macros.
+`xr_grid_entity_packet.h` and `xr_grid_entity_packet.py` are emitted from `EntityPacket/Codec.lean` and committed at the root, so a repository that vendors this one gets a codec without running Lean. The C is plain, with no dependency beyond `stdint.h`. The Python writes a field at a time at a named offset rather than through one `struct` format string, which would state the layout a second time as positions that no longer name the offsets they stand for.
 
 It exists because `transport-fanout/src/fanout.cpp` has included it since it was written and nobody had emitted it — that repository's `CMakeLists.txt` names the missing header as the reason it has never built, and says why copying one in by hand would be wrong: "copying the generated headers here would put one decision in two places."
 
-Do not edit it. Edit `Codec.lean`, where the offsets are named once and read by the encoder, the decoder and the emitter, then run `packet_emit` again.
+The Python exists because RFD 0123 puts a second implementation of the WebTransport contract on `pywebtransport`, and a second implementation that retyped this layout would test whether two people can copy a table.
+
+Do not edit either. Edit `Codec.lean`, where the offsets are named once and read by the encoder, the decoder and both emitters, then run `packet_emit` again.
 
 ## Verify
 

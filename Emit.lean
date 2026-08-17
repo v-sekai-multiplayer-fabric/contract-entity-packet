@@ -1,13 +1,18 @@
 import EntityPacket.Gen
 import EntityPacket.EmitC
+import EntityPacket.EmitPy
 open EntityPacket
 
--- Two outputs, and they are the same claim twice.
+-- Three outputs, and they are the same claim three times.
 --
 -- `packet_golden.csv` says what the bytes are for 64 known packets; `xr_grid_entity_packet.h`
--- says how to make them in C. Emitting both from one run is what lets `test/golden.c` hold the
--- second to the first: a header generated from the spec is a claim about provenance, and only
--- the golden vectors make it a claim about bytes.
+-- says how to make them in C and `xr_grid_entity_packet.py` how to make them in Python.
+-- Emitting all of them from one run is what lets `test/golden.c` and the Python pair's
+-- conformance gate hold the codecs to the first: a codec generated from the spec is a claim
+-- about provenance, and only the golden vectors make it a claim about bytes.
+--
+-- The Python codec exists because a second implementation of the wire is worth nothing if it
+-- reads the layout off the same table by hand. See EmitPy.lean.
 def main : IO Unit := do
   IO.FS.createDirAll "build"
   let mut out := "hex,gid,pumx,pumy,pumz,velx,vely,velz,pay0,pay41\n"
@@ -20,3 +25,6 @@ def main : IO Unit := do
 
   IO.FS.writeFile "build/xr_grid_entity_packet.h" cHeader
   IO.println s!"wrote build/xr_grid_entity_packet.h ({SIZE} bytes, payload at {PAYLOAD_OFFSET})"
+
+  IO.FS.writeFile "build/xr_grid_entity_packet.py" pyModule
+  IO.println s!"wrote build/xr_grid_entity_packet.py ({SIZE} bytes, payload at {PAYLOAD_OFFSET})"
